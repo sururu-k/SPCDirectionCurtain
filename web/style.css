@@ -1,0 +1,404 @@
+/* 名鉄スカーレット＆ダークテーマ スタイルシート */
+:root {
+    --meitetsu-red: #C8102E;
+    --meitetsu-blue: #005BAC;
+    --meitetsu-green: #008542;
+    --bg-color: #121212;
+    --card-bg: #1E1E1E;
+    --card-border: #333333;
+    --text-primary: #EEEEEE;
+    --text-muted: #888888;
+    --accent-glow: rgba(200, 16, 46, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 12px;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ヘッダー */
+.app-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--card-border);
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.badge-meitetsu {
+    background-color: var(--meitetsu-red);
+    color: #FFF;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.app-header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-dot.connected { background-color: #00E676; box-shadow: 0 0 6px #00E676; }
+.status-dot.disconnected { background-color: #FF5252; }
+
+/* 方向幕プレビュー枠 */
+.rollsign-display-card {
+    background: #000;
+    border: 3px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.rollsign-frame {
+    background: #FFF;
+    color: #111;
+    border-radius: 4px;
+    padding: 16px 12px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.rollsign-curtain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    transition: transform 0.3s ease-in-out, opacity 0.2s ease;
+}
+
+.sign-type {
+    background: var(--meitetsu-blue);
+    color: #FFF;
+    font-size: 1.5rem;
+    font-weight: 900;
+    padding: 2px 24px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    letter-spacing: 4px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.sign-dest {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.sign-dest-en {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #444;
+    margin-top: 4px;
+    text-align: center;
+}
+
+.display-status-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: #00E676;
+}
+
+/* 運行ダイヤ自動連動カード */
+.timetable-card, .control-panel-card, .quick-dest-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.card-header, .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.card-header h3, .panel-header h3, .quick-dest-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.timetable-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #141414;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border-left: 4px solid var(--meitetsu-red);
+}
+
+.clock-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.clock-time {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: #FFD54F;
+}
+
+.next-train-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.next-time { font-weight: bold; }
+.badge-type-express {
+    background: var(--meitetsu-blue);
+    color: #FFF;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* スイッチ (トグル) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #555; transition: .3s; border-radius: 24px;
+}
+.slider:before {
+    position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+    background-color: white; transition: .3s; border-radius: 50%;
+}
+input:checked + .slider { background-color: #00E676; }
+input:checked + .slider:before { transform: translateX(20px); }
+
+/* デジスイッチ操作部 */
+.digiswitch-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 10px;
+}
+
+.digiswitch-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #111;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 2px solid #444;
+}
+
+.unit-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.btn-step {
+    background: #333;
+    color: #FFF;
+    border: none;
+    width: 38px;
+    height: 32px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.btn-step:hover { background: #444; }
+.btn-step:active { background: #666; }
+
+.digit-window {
+    background: #000;
+    color: #00E676;
+    font-size: 2.2rem;
+    font-weight: 700;
+    font-family: monospace;
+    width: 44px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 6px 0;
+    border: 2px inset #222;
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+.btn-send {
+    background: var(--meitetsu-red);
+    color: #FFF;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--accent-glow);
+}
+.btn-send:hover { background: #E01138; }
+
+.btn-stop {
+    background: #444;
+    color: #DDD;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.btn-stop:hover { background: #555; }
+
+/* クイック選択グリッド */
+.dest-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding-right: 4px;
+}
+
+.dest-btn {
+    background: #2A2A2A;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    text-align: left;
+    transition: background .15s;
+}
+.dest-btn:hover { background: #383838; }
+.dest-btn.active {
+    border-color: var(--meitetsu-red);
+    background: #38181E;
+}
+
+.dest-btn-type {
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #FFF;
+}
+.dest-btn-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-grow: 1;
+}
+.dest-btn-code {
+    font-size: 0.7rem;
+    font-family: monospace;
+    color: var(--text-muted);
+}
+
+/* フッター */
+.app-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.esp-config {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.esp-config input {
+    flex-grow: 1;
+    background: #222;
+    border: 1px solid #444;
+    color: #FFF;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.btn-connect {
+    background: #333;
+    border: 1px solid #555;
+    color: #FFF;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.btn-connect:hover { background: #444; }
+
+.copyright {
+    font-size: 0.75rem;
+    color: #555;
+}

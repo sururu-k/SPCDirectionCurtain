@@ -5,7 +5,16 @@
 ### 1.1 最終目標
 **小糸工業（現：コイト電工）製「SPC 60Hz」プロトコルを採用した実物鉄道方向幕（名鉄6500系等）を、純正SPC3制御基板のまま実車互換の信号で制御する「自作SPC指令器（Indicator Controller）」を完成させること。**
 
-### 1.2 設計思想と背景
+### 1.2 プロジェクト構成ドキュメント・データ一覧
+* 📘 **全体マスタープラン**: [`plan/plan.md`](file:///Users/hiro/SPCDirectionCurtain/plan/plan.md)（本仕様書）
+* ⚡ **詳細回路設計書**: [`plan/circuit_design.md`](file:///Users/hiro/SPCDirectionCurtain/plan/circuit_design.md)（機能ブロック図・定数計算・結線表）
+* 📱 **スマート指令器計画書**: [`plan/smart_controller_plan.md`](file:///Users/hiro/SPCDirectionCurtain/plan/smart_controller_plan.md)（スマホWi-Fi操作・ダイヤ連動）
+* 🔍 **実機ピン特定マニュアル**: [`howTo/pin_identification.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/pin_identification.md)（テスターによる実機配線同定手順）
+* 📑 **名鉄コマ対照表 (Markdown)**: [`data/rollsign_table.md`](file:///Users/hiro/SPCDirectionCurtain/data/rollsign_table.md)（コマ番号・行先一覧）
+* 💾 **名鉄コマ対照表 (C++ヘッダー)**: [`data/meitetsu_destinations.h`](file:///Users/hiro/SPCDirectionCurtain/data/meitetsu_destinations.h)（マイコン用PROGMEM配列）
+* 🌐 **スマホWeb指令器 UIアプリ**: [`web/`](file:///Users/hiro/SPCDirectionCurtain/web/)（[`index.html`](file:///Users/hiro/SPCDirectionCurtain/web/index.html), [`style.css`](file:///Users/hiro/SPCDirectionCurtain/web/style.css), [`app.js`](file:///Users/hiro/SPCDirectionCurtain/web/app.js), [`timetable.json`](file:///Users/hiro/SPCDirectionCurtain/web/timetable.json)）
+
+### 1.3 設計思想と背景
 * **純正基板の活用**:
   方向幕の自作制御では、既存基板を撤去してモータードライバで直結制御する例が多いが、本プロジェクトでは**「実車と同じSPC 60Hz指令信号を生成し、純正SPC3基板のマイクロコンピュータと双方向に通信して制御する」**というアプローチを採る。
 * **絶対的な信用ソース（Source of Truth）**:

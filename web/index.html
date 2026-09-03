@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPC方向幕 Web指令器 | Meitetsu Rollsign Controller</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-brand">
+                <span class="badge-meitetsu">名鉄風</span>
+                <h1>SPC方向幕 スマート指令器</h1>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span class="status-text">ESP32: 未接続 (シミュレーションモード)</span>
+            </div>
+        </header>
+
+        <!-- メイン画面: 方向幕プレビュー -->
+        <section class="rollsign-display-card">
+            <div class="rollsign-frame">
+                <div class="rollsign-curtain" id="rollsignCurtain">
+                    <div class="sign-type" id="signType">急行</div>
+                    <div class="sign-dest" id="signDest">中部国際空港</div>
+                    <div class="sign-dest-en" id="signDestEn">Central Japan Int'l Airport</div>
+                </div>
+            </div>
+            <div class="display-status-bar">
+                <span id="currentStatusText">待機中 (STANDBY)</span>
+                <span id="currentCodeText">CMD CODE: 05 [0x05]</span>
+            </div>
+        </section>
+
+        <!-- リアルタイム運行ダイヤ自動連動モード -->
+        <section class="timetable-card">
+            <div class="card-header">
+                <h3>🕒 運行ダイヤ自動連動 (名鉄名古屋駅)</h3>
+                <label class="switch">
+                    <input type="checkbox" id="timetableAutoSwitch">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="timetable-body">
+                <div class="clock-display">
+                    <span class="clock-label">現在時刻:</span>
+                    <span class="clock-time" id="realtimeClock">--:--:--</span>
+                </div>
+                <div class="next-train-info" id="nextTrainInfo">
+                    <span class="next-label">次の発車:</span>
+                    <span class="next-time">--:--</span>
+                    <span class="next-type badge-type-express">--</span>
+                    <span class="next-dest">連動OFF</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 物理風 デジスイッチ＆操作パネル -->
+        <section class="control-panel-card">
+            <div class="panel-header">
+                <h3>🎛️ 指令器 コマ手動設定</h3>
+                <div class="address-selector">
+                    <label>アドレス:</label>
+                    <select id="addrSelect">
+                        <option value="2" selected>ADDR 2 (側面幕)</option>
+                        <option value="1">ADDR 1 (前面幕)</option>
+                        <option value="0">ADDR 0 (一斉)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="digiswitch-group">
+                <!-- 10の位 -->
+                <div class="digiswitch-unit">
+                    <div class="unit-label">10位</div>
+                    <button class="btn-step" id="btnTensUp">▲</button>
+                    <div class="digit-window" id="digitTens">0</div>
+                    <button class="btn-step" id="btnTensDown">▼</button>
+                </div>
+
+                <!-- 1の位 -->
+                <div class="digiswitch-unit">
+                    <div class="unit-label">1位</div>
+                    <button class="btn-step" id="btnOnesUp">▲</button>
+                    <div class="digit-window" id="digitOnes">5</div>
+                    <button class="btn-step" id="btnOnesDown">▼</button>
+                </div>
+
+                <!-- 指令実行ボタン -->
+                <div class="action-buttons">
+                    <button class="btn-send" id="btnSend">指令送出 (SEND)</button>
+                    <button class="btn-stop" id="btnStop">指令停止 (STOP)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 行先クイック選択グリッド -->
+        <section class="quick-dest-card">
+            <h3>📑 行先クイック選択リスト</h3>
+            <div class="dest-grid" id="destGrid">
+                <!-- JavaScriptで自動生成 -->
+            </div>
+        </section>
+
+        <!-- ESP32接続設定モーダル用ボタン -->
+        <footer class="app-footer">
+            <div class="esp-config">
+                <input type="text" id="espIpInput" placeholder="ESP32 IP (例: 192.168.4.1)" value="192.168.4.1">
+                <button class="btn-connect" id="btnConnect">接続</button>
+            </div>
+            <p class="copyright">SPC Rollsign Controller Web App &copy; 2026</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
