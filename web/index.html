@@ -2,214 +2,166 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>名鉄 LED発車標 ＆ 方向幕シミュレーター</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>名鉄 LED発車標 ＆ 方向幕シミュレーター (BLE対応)</title>
+    <link rel="stylesheet" href="style.css?v=3.1">
 </head>
 <body>
-    <div class="container">
-        <!-- ナビゲーション -->
-        <nav class="top-nav">
-            <span class="site-title">名鉄 LED発車標 ＆ 方向幕シミュレーター（SPC連動版）</span>
-            <span class="conn-status" id="connStatus">シミュレーター稼働中（ESP32未接続）</span>
-        </nav>
+    <div class="main-container">
+        <!-- 上部ヘッダー -->
+        <header class="site-header">
+            <div class="header-left">
+                <span class="meitetsu-emblem">名鉄</span>
+                <h1 class="header-heading">LED発車標 ＆ 方向幕指令器</h1>
+            </div>
+            <!-- BLE接続エリア -->
+            <div class="ble-bar">
+                <button class="btn-ble" id="btnBleConnect">🔵 Bluetooth (BLE) 接続</button>
+                <span class="ble-status-badge disconnected" id="bleStatusBadge">BLE未接続 (シミュレーター動作)</span>
+                <button class="btn-audio-toggle" id="btnSoundToggle">🔊 音 ON</button>
+            </div>
+        </header>
 
-        <hr>
-
-        <!-- 1. 発車標シミュレーター部 (R113スタイル) -->
-        <section class="section-block">
-            <div class="section-title">
-                <h2>駅 LED電光掲示板（発車標）</h2>
-                <div class="station-switch">
-                    駅選択:
+        <!-- 1. 駅 LED電光掲示板（発車標）セクション (R113様オマージュ) -->
+        <section class="board-panel">
+            <div class="board-toolbar">
+                <div class="station-picker">
+                    <label>駅ホーム選択:</label>
                     <select id="stationSelect">
-                        <option value="nagoya" selected>名鉄名古屋 1番線（一宮・岐阜・犬山方面）</option>
-                        <option value="kanayama">金山 3番線（中部国際空港・河和・内海方面）</option>
-                        <option value="higashiokazaki">東岡崎 1番線（豊橋方面）</option>
-                        <option value="gifu">名鉄岐阜 2番線（名古屋方面）</option>
+                        <option value="nagoya" selected>名鉄名古屋 1番線 (一宮・岐阜・犬山方面)</option>
+                        <option value="kanayama">金山 3番線 (中部国際空港・河和・内海方面)</option>
+                        <option value="higashiokazaki">東岡崎 1番線 (豊橋方面)</option>
+                        <option value="gifu">名鉄岐阜 2番線 (名古屋方面)</option>
                     </select>
                 </div>
-            </div>
-
-            <!-- LED発車標 本体 -->
-            <div class="hasshahyo-unit">
-                <div class="hasshahyo-inner">
-                    <!-- 1段目 (先発) -->
-                    <div class="led-line" id="trainRow1">
-                        <span class="led-col-order">先発</span>
-                        <span class="led-col-time" id="ledTime1">10:05</span>
-                        <span class="led-col-type type-exp" id="ledType1">急　行</span>
-                        <span class="led-col-dest" id="ledDest1">中部国際空港</span>
-                        <span class="led-col-cars" id="ledCars1">6両</span>
-                        <span class="led-col-door" id="ledDoor1">3ドア</span>
-                    </div>
-                    <!-- 2段目 (次発) -->
-                    <div class="led-line" id="trainRow2">
-                        <span class="led-col-order">次発</span>
-                        <span class="led-col-time" id="ledTime2">10:20</span>
-                        <span class="led-col-type type-loc" id="ledType2">普　通</span>
-                        <span class="led-col-dest" id="ledDest2">東岡崎</span>
-                        <span class="led-col-cars" id="ledCars2">4両</span>
-                        <span class="led-col-door" id="ledDoor2">3ドア</span>
-                    </div>
-                    <!-- 案内・接近情報 -->
-                    <div class="led-info-line">
-                        <span class="led-blink" id="ledApproach">● 電車がまいります</span>
-                        <span class="led-text" id="ledNotice">足元の乗車位置番号をご確認ください。</span>
-                    </div>
+                <div class="board-clock-box">
+                    <span class="clock-label">現在時刻:</span>
+                    <span class="clock-digits" id="realtimeClock">--:--:--</span>
                 </div>
             </div>
 
-            <div class="control-row">
-                表示モード:
-                <select id="arrivalSelect">
-                    <option value="0" selected>通常表示</option>
-                    <option value="1">電車到着表示（接近点滅）</option>
-                </select>
-                言語:
-                <select id="langSelect">
-                    <option value="ja" selected>日本語固定</option>
-                    <option value="en">英語固定</option>
-                    <option value="auto">日/英 自動交互（8秒/3秒）</option>
-                </select>
-                時計: <span class="clock-text" id="realtimeClock">--:--:--</span>
-                <label class="check-label">
+            <!-- 発車標 本体 (LED電光表示) -->
+            <div class="station-led-display">
+                <!-- 先発 -->
+                <div class="led-train-row active-row" id="rowTrain1" title="クリックでこの列車の行先を方向幕にセット">
+                    <span class="col-pos">先発</span>
+                    <span class="col-time" id="ledTime1">10:05</span>
+                    <span class="col-type type-exp" id="ledType1">急　行</span>
+                    <span class="col-dest" id="ledDest1">中部国際空港</span>
+                    <span class="col-cars" id="ledCars1">6両</span>
+                    <span class="col-door" id="ledDoor1">3ﾄﾞｱ</span>
+                </div>
+                <!-- 次発 -->
+                <div class="led-train-row" id="rowTrain2" title="クリックでこの列車の行先を方向幕にセット">
+                    <span class="col-pos">次発</span>
+                    <span class="col-time" id="ledTime2">10:20</span>
+                    <span class="col-type type-loc" id="ledType2">普　通</span>
+                    <span class="col-dest" id="ledDest2">東岡崎</span>
+                    <span class="col-cars" id="ledCars2">4両</span>
+                    <span class="col-door" id="ledDoor2">3ﾄﾞｱ</span>
+                </div>
+                <!-- 案内テロップ -->
+                <div class="led-footer-row">
+                    <span class="led-blink-warning" id="ledBlinkWarning">● 電車がまいります</span>
+                    <span class="led-marquee-msg" id="ledNoticeMsg">足元の乗車位置でお待ちください。足元の乗車位置番号をご確認ください。</span>
+                </div>
+            </div>
+
+            <div class="board-action-row">
+                <label class="auto-sync-label">
                     <input type="checkbox" id="timetableAutoSwitch">
-                    実時間ダイヤ自動連動
+                    <span>実時間ダイヤに連動して方向幕を自動で回す</span>
                 </label>
-                <input type="button" value="発車標の列車を方向幕に設定" id="btnSyncHasshahyo">
+                <button class="btn-sync-now" id="btnSyncNow">発車標の列車を方向幕に反映 ▶</button>
             </div>
         </section>
 
-        <hr>
+        <!-- 2. 実車 方向幕プレビューセクション (新広見運輸区様オマージュ) -->
+        <section class="rollsign-panel">
+            <div class="skin-switch-bar">
+                <label>車体形式タイプ:</label>
+                <select id="carTypeSelect">
+                    <option value="skin-6000" selected>6000系・6500系 (スカーレット鋼製車・鉄仮面)</option>
+                    <option value="skin-3500">3500系・3700系 (スカーレットアルミ枠)</option>
+                    <option value="skin-9500">3300系・9500系 (ステンレス車体・LED表示)</option>
+                </select>
+            </div>
 
-        <!-- 2. 方向幕シミュレーター部 (新広見運輸区スタイル) -->
-        <section class="section-block">
-            <h2>方向幕（行先表示器）</h2>
-
-            <div class="rollsign-wrapper">
-                <!-- 車体窓枠 -->
-                <div class="train-car-window skin-6000" id="carWindow">
-                    <div class="curtain-display" id="curtainDisplay">
-                        <span class="curtain-type" id="curtainType">急行</span>
-                        <span class="curtain-dest" id="curtainDest">中部国際空港</span>
-                        <span class="curtain-en" id="curtainEn">Central Japan Int'l Airport</span>
-                    </div>
+            <!-- 車両窓枠 ＆ 方向幕 -->
+            <div class="car-outer-skin skin-6000" id="carOuterSkin">
+                <div class="curtain-sheet" id="curtainSheet">
+                    <span class="curtain-type-badge" id="curtainTypeBadge">急行</span>
+                    <span class="curtain-dest-jp" id="curtainDestJp">中部国際空港</span>
+                    <span class="curtain-dest-en" id="curtainDestEn">Central Japan Int'l Airport</span>
                 </div>
             </div>
 
-            <div class="rollsign-status-bar">
-                <span>現在コマ位置: <strong id="currentPosText">05</strong> (<span id="currentNameText">急行 中部国際空港</span>)</span>
-                <span>指令器設定: <strong id="currentSetText">05</strong> [0x05]</span>
-                <span id="motionStatus">停止中</span>
+            <div class="sign-status-strip">
+                <span>幕位置: <strong id="curPosNum">05</strong> (<span id="curPosName">急行 中部国際空港</span>)</span>
+                <span>指令設定: <strong id="curSetNum">05</strong> [0x05]</span>
+                <span class="motion-badge" id="motionBadge">一致停止</span>
             </div>
+        </section>
 
-            <!-- コントロールフォーム -->
-            <div class="setting-controls">
-                <table class="form-table">
-                    <tr>
-                        <th>車両背景（形式）:</th>
-                        <td>
-                            <select id="carTypeSelect">
-                                <option value="skin-6000" selected>6000系・6500系（スカーレット鋼製車・鉄仮面）</option>
-                                <option value="skin-3500">3500系・3700系（スカーレットアルミ車）</option>
-                                <option value="skin-9500">3300系・9500系（ステンレス車体・LED枠）</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>種別選択:</th>
-                        <td>
-                            <select id="typeSelect">
-                                <option value="急行" selected>急　行</option>
-                                <option value="普通">普　通</option>
-                                <option value="準急">準　急</option>
-                                <option value="快急">快　急</option>
-                                <option value="特急">特　急</option>
-                                <option value="快特">快　特</option>
-                                <option value="ミュースカイ">ミュースカイ</option>
-                                <option value="回送">回　送</option>
-                                <option value="試運転">試運転</option>
-                                <option value="団体">団　体</option>
-                                <option value="臨時">臨　時</option>
-                                <option value="締切">締　切</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>行先選択（全線網羅）:</th>
-                        <td>
-                            <select id="destSelect">
-                                <!-- JavaScriptで全行先を動的生成 -->
-                            </select>
-                            <input type="button" value="選択した行先に回す" id="btnApplySelect">
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- 物理風 指令器操作部 -->
-            <div class="indicator-unit">
-                <div class="indicator-box">
-                    <span class="box-label">SPC指令器 デジスイッチ設定</span>
-                    <div class="digi-controls">
+        <!-- 3. 指令器 操作盤 (デジスイッチ ＆ 行先選択) -->
+        <section class="controller-panel">
+            <div class="control-flex-box">
+                <!-- デジスイッチ -->
+                <div class="digiswitch-module">
+                    <span class="module-caption">SPC指令器 (コマ設定)</span>
+                    <div class="digi-rotary-wrap">
                         <!-- 10位 -->
-                        <div class="digi-column">
-                            <button class="digi-btn" id="btnTensUp">▲</button>
-                            <span class="digi-num" id="digitTens">0</span>
-                            <button class="digi-btn" id="btnTensDown">▼</button>
+                        <div class="rotary-col">
+                            <span class="col-tag">10位</span>
+                            <button class="rotary-btn" id="btnTensUp">▲</button>
+                            <span class="rotary-val" id="digitTens">0</span>
+                            <button class="rotary-btn" id="btnTensDown">▼</button>
                         </div>
                         <!-- 1位 -->
-                        <div class="digi-column">
-                            <button class="digi-btn" id="btnOnesUp">▲</button>
-                            <span class="digi-num" id="digitOnes">5</span>
-                            <button class="digi-btn" id="btnOnesDown">▼</button>
+                        <div class="rotary-col">
+                            <span class="col-tag">1位</span>
+                            <button class="rotary-btn" id="btnOnesUp">▲</button>
+                            <span class="rotary-val" id="digitOnes">5</span>
+                            <button class="rotary-btn" id="btnOnesDown">▼</button>
                         </div>
 
-                        <div class="digi-actions">
-                            <input type="button" class="btn-action send" value="指令送出 (回す)" id="btnSend">
-                            <input type="button" class="btn-action stop" value="停止" id="btnStop">
-                            <input type="button" class="btn-step" value="◀ 1コマ戻し" id="btnStepBack">
-                            <input type="button" class="btn-step" value="1コマ送り ▶" id="btnStepFwd">
+                        <!-- 実行ボタン -->
+                        <div class="trigger-group">
+                            <button class="btn-execute send" id="btnSend">指令送出 (回す)</button>
+                            <button class="btn-execute stop" id="btnStop">停止</button>
+                            <div class="step-sub-group">
+                                <button class="btn-step-sm" id="btnStepBack">◀ 戻し</button>
+                                <button class="btn-step-sm" id="btnStepFwd">送り ▶</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="sound-box">
-                    動作音設定:
-                    <label><input type="radio" name="soundOpt" value="on" checked> 音あり（モーター・クリック音）</label>
-                    <label><input type="radio" name="soundOpt" value="off"> 消音</label>
+                <!-- 行先クイック選択 -->
+                <div class="quick-select-module">
+                    <span class="module-caption">行先・種別選択 (全線網羅)</span>
+                    <div class="quick-select-body">
+                        <select id="quickDestSelect" size="6" class="select-dest-list">
+                            <!-- JSで生成 -->
+                        </select>
+                        <button class="btn-apply-dest" id="btnApplyDest">選択した行先に回す</button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <hr>
-
-        <!-- 3. 実機ESP32接続（実物方向幕がある場合） -->
-        <section class="section-block">
-            <h3>実物方向幕との接続（ESP32連携）</h3>
-            <p class="desc-text">自作したSPC指令器（ESP32）のIPアドレスを入力して接続すると、画面上の操作がそのまま実物の方向幕に送られます。</p>
-            <div class="esp-row">
-                ESP32 IP: <input type="text" id="espIpInput" value="192.168.4.1" size="16">
-                <input type="button" value="接続" id="btnConnect">
-                <span id="espStatusText">未接続（ブラウザ内シミュレーターで動作中）</span>
+        <!-- フッター ＆ 出典 -->
+        <footer class="app-footer">
+            <div class="footer-sources">
+                <span class="source-label">参考・出典:</span>
+                <a href="https://r113.sakura.ne.jp/p/hasshahyo/meitetsu-led/index.html" target="_blank" rel="noopener">名鉄 LED電光掲示板 発車標シミュレーター (R113様)</a> ｜
+                <a href="https://mei-tr.sakura.ne.jp/des/meitetsu/" target="_blank" rel="noopener">名鉄 LED方向幕シミュレーター (新広見運輸区様)</a> ｜
+                <span>三河技工 yasai 著『SPC 指令で方向幕を動かしたい本』</span>
             </div>
-        </section>
-
-        <hr>
-
-        <!-- フッター -->
-        <footer class="site-footer">
-            <p><strong>参考・出典</strong></p>
-            <ul>
-                <li><a href="https://r113.sakura.ne.jp/p/hasshahyo/meitetsu-led/index.html" target="_blank" rel="noopener">名鉄 LED電光掲示板 発車標シミュレーター（R113様）</a></li>
-                <li><a href="https://mei-tr.sakura.ne.jp/des/meitetsu/" target="_blank" rel="noopener">名鉄 LED方向幕シミュレーター（新広見運輸区様）</a></li>
-                <li>三河技工 yasai 著『SPC 指令で方向幕を動かしたい本』</li>
-            </ul>
-            <p class="copyright">名鉄SPC方向幕＆発車標シミュレーター（自作SPC指令器プロジェクト）</p>
+            <p class="copyright-text">名鉄SPC方向幕＆LED発車標 Web指令シミュレーター (ESP32 BLE対応)</p>
         </footer>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3.1"></script>
 </body>
 </html>

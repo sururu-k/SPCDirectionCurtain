@@ -1,5 +1,5 @@
 // ==============================================================================
-// 名鉄 LED発車標 ＆ 方向幕シミュレーター JavaScript
+// 名鉄 LED発車標 ＆ 方向幕シミュレーター (Web Bluetooth BLE対応)
 // ==============================================================================
 
 // 名鉄全線 コマ対照データベース (新広見運輸区様データ準拠)
@@ -111,17 +111,22 @@ let isTimetableAuto = false;
 let timetableData = [];
 let soundEnabled = true;
 
-// 発車標表示データ
-let currentTrain1 = null;
-let currentTrain2 = null;
-let displayLang = "ja";
-let langCycle = 0;
+// 発車標データ
+let train1 = null;
+let train2 = null;
 
-// ESP32 WebSocket
-let wsSocket = null;
-let isConnected = false;
+// Web Bluetooth (BLE) 関連
+// 標準的なESP32 BLE UART / SPCサービスUUID
+const BLE_SERVICE_UUID        = "19b10000-e8f2-537e-4f6c-d104768a1214";
+const BLE_CHAR_TX_COMMAND_UUID = "19b10001-e8f2-537e-4f6c-d104768a1214"; // 指令送信 (Write)
+const BLE_CHAR_RX_STATUS_UUID  = "19b10002-e8f2-537e-4f6c-d104768a1214"; // 状態通知 (Notify)
 
-// Web Audio API
+let bleDevice = null;
+let bleTxChar = null;
+let bleRxChar = null;
+let isBleConnected = false;
+
+// Web Audio
 let audioCtx = null;
 let motorOsc = null;
 let motorGain = null;
@@ -137,9 +142,9 @@ function playClickSound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.025);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1100, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(250, audioCtx.currentTime + 0.025);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.025);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -155,9 +160,9 @@ function playRelaySound() {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = "triangle";
-        osc.frequency.setValueAtTime(350, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(380, audioCtx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -175,7 +180,7 @@ function startMotorSound() {
         motorGain = audioCtx.createGain();
         motorOsc.type = "sawtooth";
         motorOsc.frequency.setValueAtTime(120, audioCtx.currentTime);
-        motorGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        motorGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
         motorOsc.connect(motorGain);
         motorGain.connect(audioCtx.destination);
         motorOsc.start();
@@ -194,34 +199,37 @@ function stopMotorSound() {
 }
 
 // DOM
-const carWindow = document.getElementById("carWindow");
-const curtainType = document.getElementById("curtainType");
-const curtainDest = document.getElementById("curtainDest");
-const curtainEn = document.getElementById("curtainEn");
-const currentPosText = document.getElementById("currentPosText");
-const currentNameText = document.getElementById("currentNameText");
-const currentSetText = document.getElementById("currentSetText");
-const motionStatus = document.getElementById("motionStatus");
+const carOuterSkin = document.getElementById("carOuterSkin");
+const curtainSheet = document.getElementById("curtainSheet");
+const curtainTypeBadge = document.getElementById("curtainTypeBadge");
+const curtainDestJp = document.getElementById("curtainDestJp");
+const curtainDestEn = document.getElementById("curtainDestEn");
+const curPosNum = document.getElementById("curPosNum");
+const curPosName = document.getElementById("curPosName");
+const curSetNum = document.getElementById("curSetNum");
+const motionBadge = document.getElementById("motionBadge");
 const realtimeClock = document.getElementById("realtimeClock");
-const destSelect = document.getElementById("destSelect");
-const typeSelect = document.getElementById("typeSelect");
+const quickDestSelect = document.getElementById("quickDestSelect");
 const digitTens = document.getElementById("digitTens");
 const digitOnes = document.getElementById("digitOnes");
+const bleStatusBadge = document.getElementById("bleStatusBadge");
+const btnBleConnect = document.getElementById("btnBleConnect");
 
 // 発車標DOM
 const ledTime1 = document.getElementById("ledTime1");
 const ledType1 = document.getElementById("ledType1");
 const ledDest1 = document.getElementById("ledDest1");
 const ledCars1 = document.getElementById("ledCars1");
+const ledDoor1 = document.getElementById("ledDoor1");
 const ledTime2 = document.getElementById("ledTime2");
 const ledType2 = document.getElementById("ledType2");
 const ledDest2 = document.getElementById("ledDest2");
 const ledCars2 = document.getElementById("ledCars2");
-const ledApproach = document.getElementById("ledApproach");
+const ledDoor2 = document.getElementById("ledDoor2");
 
 // 初期化
 document.addEventListener("DOMContentLoaded", () => {
-    initDestDropdown();
+    initQuickSelect();
     loadTimetable();
     startClock();
     renderCurtain(currentPhysicalPos);
@@ -259,45 +267,38 @@ document.addEventListener("DOMContentLoaded", () => {
         sendCommand(2, targetCommandCode);
     });
 
-    // 行先選択プルダウンから適用
-    document.getElementById("btnApplySelect").addEventListener("click", () => {
-        const code = parseInt(destSelect.value, 10);
+    // 行先リスト選択
+    document.getElementById("btnApplyDest").addEventListener("click", () => {
+        const code = parseInt(quickDestSelect.value, 10);
         syncSwitchFromCode(code);
         sendCommand(2, code);
     });
 
-    // 発車標を方向幕に設定
-    document.getElementById("btnSyncHasshahyo").addEventListener("click", () => {
-        if (currentTrain1) {
-            syncSwitchFromCode(currentTrain1.code);
-            sendCommand(2, currentTrain1.code);
+    // 発車標同期
+    document.getElementById("btnSyncNow").addEventListener("click", () => {
+        if (train1) {
+            syncSwitchFromCode(train1.code);
+            sendCommand(2, train1.code);
         }
     });
-
-    // 発車標の行クリック
-    document.getElementById("trainRow1").addEventListener("click", () => {
-        if (currentTrain1) {
+    document.getElementById("rowTrain1").addEventListener("click", () => {
+        if (train1) {
             playClickSound();
-            syncSwitchFromCode(currentTrain1.code);
-            sendCommand(2, currentTrain1.code);
+            syncSwitchFromCode(train1.code);
+            sendCommand(2, train1.code);
         }
     });
-    document.getElementById("trainRow2").addEventListener("click", () => {
-        if (currentTrain2) {
+    document.getElementById("rowTrain2").addEventListener("click", () => {
+        if (train2) {
             playClickSound();
-            syncSwitchFromCode(currentTrain2.code);
-            sendCommand(2, currentTrain2.code);
+            syncSwitchFromCode(train2.code);
+            sendCommand(2, train2.code);
         }
     });
 
     // 車両形式切替
     document.getElementById("carTypeSelect").addEventListener("change", (e) => {
-        carWindow.className = `train-car-window ${e.target.value}`;
-    });
-
-    // 表示モード（到着接近表示）
-    document.getElementById("arrivalSelect").addEventListener("change", (e) => {
-        ledApproach.style.display = (e.target.value === "1") ? "inline" : "none";
+        carOuterSkin.className = `car-outer-skin ${e.target.value}`;
     });
 
     // ダイヤ自動連動スイッチ
@@ -306,26 +307,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isTimetableAuto) updateHasshahyo();
     });
 
-    // サウンド設定
-    document.querySelectorAll("input[name='soundOpt']").forEach(radio => {
-        radio.addEventListener("change", (e) => {
-            soundEnabled = (e.target.value === "on");
-            if (!soundEnabled) stopMotorSound();
-        });
+    // サウンドON/OFF
+    document.getElementById("btnSoundToggle").addEventListener("click", (e) => {
+        soundEnabled = !soundEnabled;
+        e.target.textContent = soundEnabled ? "🔊 音 ON" : "🔇 消音";
+        if (!soundEnabled) stopMotorSound();
     });
 
-    // ESP32接続
-    document.getElementById("btnConnect").addEventListener("click", connectESP32);
+    // BLE接続ボタン
+    btnBleConnect.addEventListener("click", handleBleConnect);
 });
 
-function initDestDropdown() {
-    destSelect.innerHTML = "";
+function initQuickSelect() {
+    quickDestSelect.innerHTML = "";
     ROLLSIGN_DATABASE.forEach(item => {
         const opt = document.createElement("option");
         opt.value = item.code;
         opt.textContent = `${String(item.code).padStart(2, '0')} [${item.type}] ${item.dest}`;
         if (item.code === currentPhysicalPos) opt.selected = true;
-        destSelect.appendChild(opt);
+        quickDestSelect.appendChild(opt);
     });
 }
 
@@ -342,14 +342,14 @@ function syncSwitchFromCode(code) {
     currentTens = Math.floor(code / 10);
     currentOnes = code % 10;
     updateSwitchDisplay();
-    destSelect.value = code;
+    quickDestSelect.value = code;
 }
 
 function updateSwitchDisplay() {
     digitTens.textContent = currentTens;
     digitOnes.textContent = currentOnes;
     const code = getSwitchCode();
-    currentSetText.textContent = `${String(code).padStart(2, '0')}`;
+    curSetNum.textContent = String(code).padStart(2, '0');
 }
 
 function stepDigit(place, delta) {
@@ -364,48 +364,59 @@ function stepDigit(place, delta) {
 function renderCurtain(code) {
     const entry = ROLLSIGN_DATABASE.find(item => item.code === code);
     if (entry) {
-        curtainType.textContent = entry.type;
-        curtainType.style.backgroundColor = entry.bg;
-        curtainType.style.color = entry.fg;
-        curtainDest.textContent = entry.dest;
-        curtainEn.textContent = entry.en;
-        currentNameText.textContent = `${entry.type} ${entry.dest}`;
+        curtainTypeBadge.textContent = entry.type;
+        curtainTypeBadge.style.backgroundColor = entry.bg;
+        curtainTypeBadge.style.color = entry.fg;
+        curtainDestJp.textContent = entry.dest;
+        curtainDestEn.textContent = entry.en;
+        curPosName.textContent = `${entry.type} ${entry.dest}`;
     } else {
-        curtainType.textContent = "未登録";
-        curtainType.style.backgroundColor = "#555";
-        curtainDest.textContent = `コマ ${code}`;
-        curtainEn.textContent = `Code ${code}`;
-        currentNameText.textContent = `未登録 (${code})`;
+        curtainTypeBadge.textContent = "未登録";
+        curtainTypeBadge.style.backgroundColor = "#555";
+        curtainDestJp.textContent = `コマ ${code}`;
+        curtainDestEn.textContent = `Code ${code}`;
+        curPosName.textContent = `未登録 (${code})`;
     }
 
-    currentPosText.textContent = String(code).padStart(2, '0');
+    curPosNum.textContent = String(code).padStart(2, '0');
     updateSwitchDisplay();
 }
 
-function sendCommand(addr, targetCode) {
+// 指令送信 (BLE実機 または ブラウザモック)
+async function sendCommand(addr, targetCode) {
     targetCommandCode = targetCode;
     playRelaySound();
 
-    if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
-        wsSocket.send(JSON.stringify({ action: "send", addr: addr, code: targetCode }));
-        motionStatus.textContent = `実機送信中（CODE:${targetCode}）`;
-        return;
+    // BLE実機が接続されている場合: BLEキャラクタリスティックにバイナリ書き込み
+    if (isBleConnected && bleTxChar) {
+        try {
+            const data = new Uint8Array([addr, targetCode]);
+            await bleTxChar.writeValue(data);
+            motionBadge.textContent = `BLE実機送信中（コマ: ${targetCode}）`;
+            motionBadge.style.color = "#005BAC";
+            return;
+        } catch (err) {
+            console.error("BLE送信エラー", err);
+        }
     }
 
+    // BLE未接続時: ブラウザシミュレーター動作
     runMockRoll(targetCode);
 }
 
 function runMockRoll(target) {
     if (isRolling) clearInterval(rollTimer);
     if (currentPhysicalPos === target) {
-        motionStatus.textContent = "一致停止（完了）";
+        motionBadge.textContent = "一致停止（完了）";
+        motionBadge.style.color = "#008542";
         stopMotorSound();
         return;
     }
 
     isRolling = true;
     startMotorSound();
-    motionStatus.textContent = `回転中 ➔ 目標コマ: ${target}`;
+    motionBadge.textContent = `回転中 ➔ 目標コマ: ${target}`;
+    motionBadge.style.color = "#C8102E";
 
     const targetIdx = ROLLSIGN_DATABASE.findIndex(i => i.code === target);
     let curIdx = getCurrentIndex();
@@ -414,26 +425,25 @@ function runMockRoll(target) {
     const diff = (targetIdx - curIdx + len) % len;
     const step = (diff <= len / 2) ? 1 : -1;
 
-    const curtain = document.getElementById("curtainDisplay");
-
     rollTimer = setInterval(() => {
-        curtain.style.transform = step > 0 ? "translateY(-6px)" : "translateY(6px)";
+        curtainSheet.style.transform = step > 0 ? "translateY(-6px)" : "translateY(6px)";
 
         setTimeout(() => {
             curIdx = (curIdx + step + len) % len;
             currentPhysicalPos = ROLLSIGN_DATABASE[curIdx].code;
             renderCurtain(currentPhysicalPos);
-            curtain.style.transform = "translateY(0)";
+            curtainSheet.style.transform = "translateY(0)";
 
             if (currentPhysicalPos === target) {
                 clearInterval(rollTimer);
                 isRolling = false;
                 stopMotorSound();
                 playRelaySound();
-                motionStatus.textContent = "一致停止（位置決め完了）";
+                motionBadge.textContent = "一致停止（完了）";
+                motionBadge.style.color = "#008542";
             }
-        }, 90);
-    }, 220);
+        }, 80);
+    }, 200);
 }
 
 function stopCommand() {
@@ -442,30 +452,91 @@ function stopCommand() {
         isRolling = false;
         stopMotorSound();
     }
-    motionStatus.textContent = "手動停止";
-    if (wsSocket && wsSocket.readyState === WebSocket.OPEN) {
-        wsSocket.send(JSON.stringify({ action: "stop" }));
+    motionBadge.textContent = "手動停止";
+    motionBadge.style.color = "#555";
+}
+
+// ==============================================================================
+// Web Bluetooth API (BLE) 接続制御
+// ==============================================================================
+async function handleBleConnect() {
+    if (!navigator.bluetooth) {
+        alert("お使いのブラウザは Web Bluetooth API に対応していません。\nGoogle Chrome (PC/Android) や Bluefy (iOS) をご利用ください。");
+        return;
+    }
+
+    if (isBleConnected && bleDevice) {
+        // 切断処理
+        if (bleDevice.gatt.connected) {
+            bleDevice.gatt.disconnect();
+        }
+        return;
+    }
+
+    try {
+        bleStatusBadge.textContent = "Bluetoothスキャン中...";
+        bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+                { namePrefix: "SPC" },
+                { namePrefix: "MEITETSU" }
+            ],
+            optionalServices: [BLE_SERVICE_UUID]
+        });
+
+        bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
+
+        bleStatusBadge.textContent = "GATT接続中...";
+        const server = await bleDevice.gatt.connect();
+        const service = await server.getPrimaryService(BLE_SERVICE_UUID);
+
+        bleTxChar = await service.getCharacteristic(BLE_CHAR_TX_COMMAND_UUID);
+        bleRxChar = await service.getCharacteristic(BLE_CHAR_RX_STATUS_UUID);
+
+        // 状態通知 (Notify) を監視
+        await bleRxChar.startNotifications();
+        bleRxChar.addEventListener('characteristicvaluechanged', onBleStatusReceived);
+
+        isBleConnected = true;
+        bleStatusBadge.className = "ble-status-badge connected";
+        bleStatusBadge.textContent = `BLE接続完了: ${bleDevice.name}`;
+        btnBleConnect.textContent = "🔴 BLE 切断";
+
+    } catch (err) {
+        console.warn("BLE接続キャンセルまたは失敗", err);
+        onBleDisconnected();
     }
 }
 
+function onBleDisconnected() {
+    isBleConnected = false;
+    bleDevice = null;
+    bleTxChar = null;
+    bleRxChar = null;
+    bleStatusBadge.className = "ble-status-badge disconnected";
+    bleStatusBadge.textContent = "BLE未接続 (シミュレーター動作)";
+    btnBleConnect.textContent = "🔵 Bluetooth (BLE) 接続";
+}
+
+// ESP32実機からアンサーバック完了通知を受信
+function onBleStatusReceived(event) {
+    const value = event.target.value;
+    const stoppedCode = value.getUint8(0);
+    currentPhysicalPos = stoppedCode;
+    renderCurtain(currentPhysicalPos);
+    motionBadge.textContent = `実機一致停止 (コマ: ${stoppedCode})`;
+    motionBadge.style.color = "#008542";
+}
+
+// ==============================================================================
+// 時計 ＆ 発車標連動
+// ==============================================================================
 function startClock() {
     setInterval(() => {
         const now = new Date();
         realtimeClock.textContent = now.toTimeString().split(' ')[0];
 
-        // 言語交互切り替え (autoモード時)
-        const langMode = document.getElementById("langSelect").value;
-        if (langMode === "auto") {
-            langCycle = (langCycle + 1) % 11;
-            displayLang = (langCycle < 8) ? "ja" : "en";
-        } else {
-            displayLang = langMode;
-        }
-
-        if (now.getSeconds() === 0 || !currentTrain1) {
+        if (now.getSeconds() === 0 || !train1) {
             updateHasshahyo();
-        } else {
-            refreshTrainDisplayTexts();
         }
     }, 1000);
 }
@@ -477,7 +548,7 @@ async function loadTimetable() {
         timetableData = data.departures;
         updateHasshahyo();
     } catch (e) {
-        console.warn("timetable.json 読込失敗", e);
+        console.warn("timetable.json 読込 (フォールバック)", e);
     }
 }
 
@@ -489,31 +560,28 @@ function updateHasshahyo() {
     let idx = timetableData.findIndex(t => t.time >= currentHM);
     if (idx === -1) idx = 0;
 
-    currentTrain1 = timetableData[idx];
-    currentTrain2 = timetableData[(idx + 1) % timetableData.length];
+    train1 = timetableData[idx];
+    train2 = timetableData[(idx + 1) % timetableData.length];
 
-    refreshTrainDisplayTexts();
-
-    if (isTimetableAuto && currentTrain1 && currentPhysicalPos !== currentTrain1.code) {
-        syncSwitchFromCode(currentTrain1.code);
-        sendCommand(2, currentTrain1.code);
+    if (train1) {
+        ledTime1.textContent = train1.time;
+        ledType1.textContent = formatType(train1.type);
+        ledType1.className = `col-type ${getTypeClass(train1.type)}`;
+        ledDest1.textContent = train1.dest;
+        ledCars1.textContent = train1.type === "特急" ? "8両" : "6両";
     }
-}
 
-function refreshTrainDisplayTexts() {
-    if (currentTrain1) {
-        ledTime1.textContent = currentTrain1.time;
-        ledType1.textContent = (displayLang === "en") ? getEnglishType(currentTrain1.type) : formatType(currentTrain1.type);
-        ledType1.className = `led-col-type ${getTypeClass(currentTrain1.type)}`;
-        ledDest1.textContent = (displayLang === "en") ? getEnglishDest(currentTrain1.dest) : currentTrain1.dest;
-        ledCars1.textContent = currentTrain1.type === "特急" ? "8両" : "6両";
+    if (train2) {
+        ledTime2.textContent = train2.time;
+        ledType2.textContent = formatType(train2.type);
+        ledType2.className = `col-type ${getTypeClass(train2.type)}`;
+        ledDest2.textContent = train2.dest;
+        ledCars2.textContent = train2.type === "普通" ? "4両" : "6両";
     }
-    if (currentTrain2) {
-        ledTime2.textContent = currentTrain2.time;
-        ledType2.textContent = (displayLang === "en") ? getEnglishType(currentTrain2.type) : formatType(currentTrain2.type);
-        ledType2.className = `led-col-type ${getTypeClass(currentTrain2.type)}`;
-        ledDest2.textContent = (displayLang === "en") ? getEnglishDest(currentTrain2.dest) : currentTrain2.dest;
-        ledCars2.textContent = currentTrain2.type === "普通" ? "4両" : "6両";
+
+    if (isTimetableAuto && train1 && currentPhysicalPos !== train1.code) {
+        syncSwitchFromCode(train1.code);
+        sendCommand(2, train1.code);
     }
 }
 
@@ -522,51 +590,9 @@ function formatType(t) {
     return t;
 }
 
-function getEnglishType(t) {
-    if (t.includes("特急")) return "Ltd.Exp";
-    if (t.includes("急行")) return "Express";
-    if (t.includes("準急")) return "Semi.Exp";
-    return "Local";
-}
-
-function getEnglishDest(d) {
-    const entry = ROLLSIGN_DATABASE.find(item => item.dest === d);
-    return entry ? entry.en : d;
-}
-
 function getTypeClass(t) {
     if (t.includes("特急") || t.includes("快特")) return "type-ltd";
     if (t.includes("急行") || t.includes("快急")) return "type-exp";
     if (t.includes("準急")) return "type-semi";
     return "type-loc";
-}
-
-function connectESP32() {
-    const ip = document.getElementById("espIpInput").value.trim();
-    if (!ip) return;
-    const statusText = document.getElementById("espStatusText");
-
-    try {
-        wsSocket = new WebSocket(`ws://${ip}:81/`);
-        wsSocket.onopen = () => {
-            statusText.textContent = `接続中: ${ip}`;
-            statusText.style.color = "#008542";
-            document.getElementById("connStatus").textContent = `ESP32接続完了 (${ip})`;
-        };
-        wsSocket.onmessage = (evt) => {
-            const data = JSON.parse(evt.data);
-            if (data.status === "stopped") {
-                currentPhysicalPos = data.code;
-                renderCurtain(currentPhysicalPos);
-                motionStatus.textContent = "実機位置決め完了";
-            }
-        };
-        wsSocket.onclose = () => {
-            statusText.textContent = "未接続（シミュレーターで動作中）";
-            statusText.style.color = "#888888";
-            document.getElementById("connStatus").textContent = "シミュレーター稼働中（ESP32未接続）";
-        };
-    } catch (e) {
-        console.error("ESP32接続失敗", e);
-    }
 }

@@ -1,7 +1,26 @@
 /* ==============================================================================
-   名鉄 LED発車標 ＆ 方向幕シミュレーター スタイルシート
-   （AI特有の過剰なダークテーマを廃し、鉄道ファンサイト本来の素朴で実用的なデザイン）
+   名鉄 LED発車標 ＆ 方向幕シミュレーター スタイルシート (BLE対応)
+   （AI臭い過剰なネオン・ダークモードを廃し、鉄道本来の精密で清潔な実車・実機デザイン）
    ============================================================================== */
+
+:root {
+    --meitetsu-red: #C8102E;
+    --meitetsu-dark-red: #990B22;
+    --meitetsu-blue: #005BAC;
+    --meitetsu-green: #008542;
+    --base-bg: #EAEAEF;
+    --panel-bg: #FFFFFF;
+    --border-color: #CCCCCC;
+    --text-main: #222222;
+    --text-sub: #666666;
+
+    /* LED発車標 */
+    --led-black: #000000;
+    --led-orange: #FF9900;
+    --led-green: #33FF33;
+    --led-red: #FF3333;
+    --led-white: #FFFFFF;
+}
 
 * {
     box-sizing: border-box;
@@ -10,88 +29,147 @@
 }
 
 body {
-    background-color: #F4F4F6;
-    color: #222222;
+    background-color: var(--base-bg);
+    color: var(--text-main);
     font-family: "Hiragino Kaku Gothic ProN", "Meiryo", -apple-system, sans-serif;
     font-size: 14px;
-    line-height: 1.6;
-    padding: 12px;
+    line-height: 1.5;
+    padding: 10px;
 }
 
-.container {
-    max-width: 820px;
+.main-container {
+    max-width: 800px;
     margin: 0 auto;
-    background: #FFFFFF;
-    border: 1px solid #CCCCCC;
-    padding: 16px 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 14px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-/* ナビゲーション */
-.top-nav {
+/* ヘッダー */
+.site-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding-bottom: 8px;
+    border-bottom: 2px solid #E0E0E0;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.site-title {
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.meitetsu-emblem {
+    background: var(--meitetsu-red);
+    color: #FFF;
+    font-weight: bold;
+    font-size: 0.8rem;
+    padding: 3px 7px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+}
+
+.header-heading {
     font-size: 1.15rem;
     font-weight: bold;
-    color: #333333;
+    color: #111;
 }
 
-.conn-status {
-    font-size: 0.85rem;
-    color: #666666;
-    background: #EEEEEE;
-    padding: 2px 8px;
-    border: 1px solid #CCCCCC;
+.ble-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-ble {
+    background: #005BAC;
+    color: #FFF;
+    border: 1px solid #004488;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-ble:hover { background: #004888; }
+
+.ble-status-badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
     border-radius: 3px;
 }
+.ble-status-badge.disconnected { background: #EEEEEE; color: #666; border: 1px solid #CCC; }
+.ble-status-badge.connected { background: #E8F5E9; color: #2E7D32; border: 1px solid #81C784; font-weight: bold; }
 
-hr {
-    border: none;
-    border-top: 1px solid #DDDDDD;
-    margin: 12px 0 16px 0;
+.btn-audio-toggle {
+    background: #F0F0F0;
+    border: 1px solid #BBB;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
 }
 
-/* セクション */
-.section-block {
-    margin-bottom: 12px;
+/* 1. LED発車標 セクション */
+.board-panel {
+    background: #F8F8FA;
+    border: 1px solid #D8D8DF;
+    border-radius: 5px;
+    padding: 10px;
 }
 
-.section-title {
+.board-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 
-h2 {
-    font-size: 1.05rem;
-    color: #222222;
-    border-left: 4px solid #C8102E; /* 名鉄スカーレット */
-    padding-left: 8px;
-    margin-bottom: 8px;
+.station-picker label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #444;
+    margin-right: 4px;
 }
 
-h3 {
-    font-size: 0.95rem;
-    color: #333333;
-    margin-bottom: 6px;
+.station-picker select {
+    padding: 3px 6px;
+    font-size: 0.85rem;
+    border: 1px solid #BBB;
+    border-radius: 3px;
+    background: #FFF;
 }
 
-/* 1. LED発車標 (実機準拠デザイン) */
-.hasshahyo-unit {
-    background: #111111;
-    border: 4px solid #333333;
-    padding: 8px 12px;
-    margin-bottom: 10px;
+.board-clock-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+.clock-label { font-size: 0.75rem; color: #666; }
+.clock-digits {
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-family: "Courier New", monospace;
+    color: #005BAC;
+}
+
+/* LED発車標 表示部 */
+.station-led-display {
+    background: var(--led-black);
+    border: 4px solid #2B2B2B;
     border-radius: 4px;
-}
-
-.hasshahyo-inner {
+    padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -99,348 +177,383 @@ h3 {
     font-weight: bold;
 }
 
-.led-line {
+.led-train-row {
     display: grid;
-    grid-template-columns: 44px 58px 74px 1fr 48px 48px;
+    grid-template-columns: 40px 54px 70px 1fr 44px 44px;
     align-items: center;
     gap: 8px;
     font-size: 1.05rem;
     padding: 3px 6px;
-    background: #000000;
-    border: 1px solid #222222;
+    background: #000;
+    border: 1px solid #1A1A1A;
+    border-radius: 2px;
     cursor: pointer;
+    transition: background .1s;
 }
-.led-line:hover {
-    background: #1A1A1A;
-}
+.led-train-row:hover { background: #161616; border-color: #333; }
+.led-train-row.active-row { border-color: var(--led-orange); }
 
-.led-col-order { color: #FFFFFF; font-size: 0.85rem; }
-.led-col-time  { color: #FF9900; } /* オレンジLED */
+.col-pos { color: var(--led-white); font-size: 0.85rem; }
+.col-time { color: var(--led-orange); }
 
-/* 種別表示 (フルカラーLED) */
-.led-col-type {
+/* 種別カラー (フルカラーLED) */
+.col-type {
     text-align: center;
     padding: 1px 4px;
     border-radius: 2px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
-.type-exp  { color: #FFFFFF; background: #005BAC; } /* 急行・青 */
-.type-loc  { color: #FF9900; border: 1px solid #FF9900; } /* 普通・オレンジ */
-.type-ltd  { color: #FFFFFF; background: #C8102E; } /* 特急・赤 */
-.type-semi { color: #FFFFFF; background: #008542; } /* 準急・緑 */
+.type-exp { color: #FFF; background: var(--meitetsu-blue); }
+.type-loc { color: var(--led-orange); border: 1px solid var(--led-orange); }
+.type-ltd { color: #FFF; background: var(--meitetsu-red); }
+.type-semi { color: #FFF; background: var(--meitetsu-green); }
 
-.led-col-dest { color: #FF9900; font-size: 1.15rem; }
-.led-col-cars { color: #33FF33; font-size: 0.9rem; } /* 緑LED */
-.led-col-door { color: #33FF33; font-size: 0.9rem; }
+.col-dest { color: var(--led-orange); font-size: 1.15rem; }
+.col-cars, .col-door { color: var(--led-green); font-size: 0.85rem; }
 
-/* 案内・接近 */
-.led-info-line {
+.led-footer-row {
     display: flex;
-    gap: 12px;
-    background: #000000;
-    padding: 3px 8px;
-    border: 1px solid #222222;
-    font-size: 0.9rem;
-    color: #FF9900;
+    gap: 10px;
+    background: #000;
+    padding: 3px 6px;
+    border: 1px solid #1A1A1A;
+    font-size: 0.85rem;
+    color: var(--led-orange);
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-.led-blink {
-    color: #FF3333;
-    animation: blinkText 1s infinite;
+.led-blink-warning {
+    color: var(--led-red);
+    font-weight: bold;
+    animation: blinkLed 1s infinite;
 }
-@keyframes blinkText {
+@keyframes blinkLed {
     0%, 49% { opacity: 1; }
     50%, 100% { opacity: 0; }
 }
 
-.control-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    background: #F9F9FB;
-    padding: 8px 10px;
-    border: 1px solid #E0E0E0;
-}
-
-.clock-text {
-    font-weight: bold;
-    color: #005BAC;
-    font-family: monospace;
-    font-size: 1rem;
-}
-
-/* 2. 方向幕プレビュー部 */
-.rollsign-wrapper {
-    display: flex;
-    justify-content: center;
-    margin: 12px 0;
-}
-
-.train-car-window {
-    width: 100%;
-    max-width: 580px;
-    min-height: 140px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-/* 6000系・6500系スキン (スカーレット鋼製枠) */
-.train-car-window.skin-6000 {
-    background: #C8102E;
-    border: 8px solid #990B22;
-    padding: 16px 20px;
-    box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
-}
-
-/* 3500系スキン (アルミ車窓枠) */
-.train-car-window.skin-3500 {
-    background: #C8102E;
-    border: 8px solid #333333;
-    padding: 14px 18px;
-}
-
-/* 9500系スキン (ステンレスLED) */
-.train-car-window.skin-9500 {
-    background: #A0A0A0;
-    border: 8px solid #555555;
-    padding: 16px 20px;
-}
-
-.curtain-display {
-    background: #FFFFFF;
-    border: 4px solid #1A1A1A;
-    width: 100%;
-    padding: 14px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.08s linear;
-}
-
-.skin-9500 .curtain-display {
-    background: #000000;
-    border-color: #222222;
-}
-
-.curtain-type {
-    background: #005BAC;
-    color: #FFFFFF;
-    font-size: 1.5rem;
-    font-weight: bold;
-    padding: 2px 28px;
-    margin-bottom: 4px;
-    border-radius: 2px;
-    letter-spacing: 4px;
-}
-
-.curtain-dest {
-    font-size: 2.3rem;
-    font-weight: bold;
-    letter-spacing: 3px;
-    color: #111111;
-    line-height: 1.1;
-    text-align: center;
-}
-.skin-9500 .curtain-dest {
-    color: #FF9900;
-}
-
-.curtain-en {
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #555555;
-    margin-top: 4px;
-    text-align: center;
-}
-.skin-9500 .curtain-en {
-    color: #888888;
-}
-
-.rollsign-status-bar {
+.board-action-row {
     display: flex;
     justify-content: space-between;
-    background: #EEEEEE;
-    border: 1px solid #CCCCCC;
-    padding: 6px 12px;
-    font-size: 0.85rem;
-    margin-bottom: 12px;
-}
-
-/* コントロール設定テーブル */
-.setting-controls {
-    margin-bottom: 12px;
-}
-
-.form-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.form-table th, .form-table td {
-    border: 1px solid #DDDDDD;
-    padding: 8px 10px;
-    font-size: 0.85rem;
-}
-
-.form-table th {
-    background: #F4F4F6;
-    width: 150px;
-    text-align: left;
-    font-weight: normal;
-}
-
-select, input[type="text"] {
-    padding: 4px 6px;
-    border: 1px solid #AAAAAA;
-    border-radius: 2px;
-    background: #FFFFFF;
-    font-size: 0.85rem;
-}
-
-input[type="button"], button {
-    padding: 4px 12px;
-    border: 1px solid #888888;
-    background: #EFEFEF;
-    border-radius: 2px;
-    cursor: pointer;
-    font-size: 0.85rem;
-}
-input[type="button"]:hover, button:hover {
-    background: #E0E0E0;
-}
-input[type="button"]:active, button:active {
-    background: #CCCCCC;
-}
-
-/* 物理風 指令器操作部 */
-.indicator-unit {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    background: #F8F8FA;
-    border: 1px solid #D0D0D5;
-    padding: 12px;
-    margin-bottom: 12px;
     align-items: center;
-}
-
-.indicator-box {
-    display: flex;
-    flex-direction: column;
+    margin-top: 8px;
+    flex-wrap: wrap;
     gap: 6px;
 }
 
-.box-label {
+.auto-sync-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #333;
+    cursor: pointer;
+}
+
+.btn-sync-now {
+    background: #EFEFEF;
+    border: 1px solid #999;
+    padding: 4px 10px;
     font-size: 0.8rem;
+    border-radius: 3px;
+    cursor: pointer;
     font-weight: bold;
-    color: #444444;
+}
+.btn-sync-now:hover { background: #DDD; }
+
+/* 2. 車両 方向幕プレビュー セクション */
+.rollsign-panel {
+    background: #FFF;
+    border: 1px solid #D8D8DF;
+    border-radius: 5px;
+    padding: 10px;
 }
 
-.digi-controls {
+.skin-switch-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
 }
-
-.digi-column {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #E6E6E8;
-    border: 1px solid #BBBBBB;
-    padding: 4px;
+.skin-switch-bar select {
+    padding: 3px 6px;
+    border: 1px solid #BBB;
     border-radius: 3px;
 }
 
-.digi-btn {
-    width: 32px;
-    height: 24px;
-    font-size: 0.75rem;
+/* 車両窓枠 */
+.car-outer-skin {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 14px 18px;
+    border-radius: 4px;
+    transition: all .15s;
+    margin-bottom: 8px;
 }
 
-.digi-num {
+/* 6000系・6500系スキン (鉄仮面スカーレット鋼製枠) */
+.car-outer-skin.skin-6000 {
+    background: var(--meitetsu-red);
+    border: 8px solid var(--meitetsu-dark-red);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.35);
+}
+
+/* 3500系スキン (アルミ枠) */
+.car-outer-skin.skin-3500 {
+    background: var(--meitetsu-red);
+    border: 8px solid #2E2E2E;
+}
+
+/* 9500系スキン (ステンレス) */
+.car-outer-skin.skin-9500 {
+    background: #9E9E9E;
+    border: 8px solid #555555;
+}
+
+.curtain-sheet {
+    background: #FFFFFF;
+    border: 4px solid #1A1A1A;
+    border-radius: 2px;
+    width: 100%;
+    max-width: 520px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.15);
+    transition: transform 0.08s linear;
+}
+
+.skin-9500 .curtain-sheet {
+    background: #000000;
+    border-color: #222;
+}
+
+.curtain-type-badge {
+    background: var(--meitetsu-blue);
+    color: #FFFFFF;
+    font-size: 1.45rem;
+    font-weight: 900;
+    padding: 2px 28px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    letter-spacing: 4px;
+}
+
+.curtain-dest-jp {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #111;
+    line-height: 1.1;
+    text-align: center;
+}
+.skin-9500 .curtain-dest-jp { color: var(--led-orange); }
+
+.curtain-dest-en {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #555;
+    margin-top: 4px;
+    text-align: center;
+}
+.skin-9500 .curtain-dest-en { color: #888; }
+
+.sign-status-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #F0F0F4;
+    border: 1px solid #CCC;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 3px;
+}
+
+.motion-badge {
+    color: #008542;
+    font-weight: bold;
+}
+
+/* 3. 指令器 操作盤 */
+.controller-panel {
+    background: #F8F8FA;
+    border: 1px solid #D8D8DF;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.control-flex-box {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.digiswitch-module {
+    flex: 1;
+    min-width: 260px;
+    background: #FFF;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    padding: 8px 10px;
+}
+
+.module-caption {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #EEE;
+    padding-bottom: 2px;
+}
+
+.digi-rotary-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rotary-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #F0F0F2;
+    border: 1px solid #BBB;
+    border-radius: 3px;
+    padding: 3px;
+}
+.col-tag { font-size: 0.65rem; color: #666; }
+
+.rotary-btn {
+    width: 32px;
+    height: 24px;
+    background: #DDD;
+    border: 1px solid #AAA;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.rotary-btn:hover { background: #CCC; }
+
+.rotary-val {
     font-size: 1.8rem;
     font-weight: bold;
     font-family: monospace;
-    color: #111111;
-    background: #FFFFFF;
-    border: 1px solid #999999;
+    background: #FFF;
+    border: 1px solid #999;
     width: 34px;
     height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 3px 0;
+    color: #111;
 }
 
-.digi-actions {
+.trigger-group {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 6px;
-    margin-left: 6px;
+    flex: 1;
 }
 
-.btn-action.send {
-    background: #C8102E;
-    color: #FFFFFF;
-    border-color: #990B22;
-    font-weight: bold;
-    padding: 6px 14px;
-}
-.btn-action.send:hover { background: #B00E28; }
-
-.btn-action.stop {
-    background: #555555;
-    color: #FFFFFF;
-    border-color: #333333;
-}
-
-.sound-box {
-    font-size: 0.8rem;
-    margin-left: auto;
-}
-
-/* 3. ESP32接続 */
-.desc-text {
-    font-size: 0.8rem;
-    color: #666666;
-    margin-bottom: 6px;
-}
-.esp-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.btn-execute {
+    padding: 6px 12px;
     font-size: 0.85rem;
+    font-weight: bold;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
 }
-#espStatusText {
-    color: #888888;
-    font-size: 0.8rem;
+.btn-execute.send {
+    background: var(--meitetsu-red);
+    color: #FFF;
+    border-color: var(--meitetsu-dark-red);
 }
+.btn-execute.send:hover { background: #B00E28; }
+
+.btn-execute.stop {
+    background: #555;
+    color: #FFF;
+    border-color: #333;
+}
+.btn-execute.stop:hover { background: #444; }
+
+.step-sub-group {
+    display: flex;
+    gap: 4px;
+}
+.btn-step-sm {
+    flex: 1;
+    background: #EAEAEA;
+    border: 1px solid #AAA;
+    border-radius: 2px;
+    padding: 3px 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+.btn-step-sm:hover { background: #DDD; }
+
+/* 行先クイック選択 */
+.quick-select-module {
+    flex: 1.2;
+    min-width: 280px;
+    background: #FFF;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    padding: 8px 10px;
+}
+
+.quick-select-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.select-dest-list {
+    width: 100%;
+    font-size: 0.85rem;
+    border: 1px solid #BBB;
+    border-radius: 3px;
+    padding: 2px;
+}
+
+.btn-apply-dest {
+    background: #005BAC;
+    color: #FFF;
+    border: 1px solid #004488;
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-apply-dest:hover { background: #004888; }
 
 /* フッター */
-.site-footer {
-    font-size: 0.8rem;
-    color: #666666;
+.app-footer {
+    padding-top: 8px;
+    border-top: 1px solid #E0E0E0;
+    font-size: 0.75rem;
+    color: var(--text-sub);
+}
+
+.footer-sources {
     line-height: 1.6;
+    margin-bottom: 4px;
 }
-.site-footer ul {
-    list-style: none;
-    margin: 4px 0 8px 0;
-}
-.site-footer a {
-    color: #005BAC;
+.footer-sources a {
+    color: var(--meitetsu-blue);
     text-decoration: none;
 }
-.site-footer a:hover {
+.footer-sources a:hover {
     text-decoration: underline;
 }
-.copyright {
-    color: #999999;
-    font-size: 0.75rem;
+.copyright-text {
+    color: #888;
 }
