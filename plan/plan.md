@@ -10,6 +10,7 @@
 * ⚡ **詳細回路設計書**: [`plan/circuit_design.md`](file:///Users/hiro/SPCDirectionCurtain/plan/circuit_design.md)（機能ブロック図・定数計算・結線表）
 * 📱 **スマート指令器計画書**: [`plan/smart_controller_plan.md`](file:///Users/hiro/SPCDirectionCurtain/plan/smart_controller_plan.md)（スマホWi-Fi操作・ダイヤ連動）
 * 🔍 **実機ピン特定マニュアル**: [`howTo/pin_identification.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/pin_identification.md)（テスターによる実機配線同定手順）
+* 🔬 **受信基板導通検査手順書**: [`howTo/board_inspection.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/board_inspection.md)（届いた基板の目視＆テスター導通確認手順）
 * 📑 **名鉄コマ対照表 (Markdown)**: [`data/rollsign_table.md`](file:///Users/hiro/SPCDirectionCurtain/data/rollsign_table.md)（コマ番号・行先一覧）
 * 💾 **名鉄コマ対照表 (C++ヘッダー)**: [`data/meitetsu_destinations.h`](file:///Users/hiro/SPCDirectionCurtain/data/meitetsu_destinations.h)（マイコン用PROGMEM配列）
 * 🚀 **GitHub Pages公開手順**: [`howTo/github_pages.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/github_pages.md)（Webアプリ無料公開ガイド）
