@@ -16,8 +16,8 @@
 // ピンアサイン定義 (plan/circuit_design.md 準拠)
 const int PIN_U0P   = 18; // 正半波ゼロクロス検出 (外部割り込み0)
 const int PIN_U0M   = 19; // 負半波ゼロクロス検出 (外部割り込み1)
-const int PIN_SPOUT = 21; // 正側トライアックSSRトリガ (MOC3041)
-const int PIN_SMOUT = 22; // 負側トライアックSSRトリガ (MOC3041)
+const int PIN_SPOUT = 4;  // 正側トライアックSSRトリガ (MOC3041)
+const int PIN_SMOUT = 5;  // 負側トライアックSSRトリガ (MOC3041)
 const int PIN_SM    = 23; // アンサーバック受信入力 (PC817C)
 const int PIN_RELAY = 26; // 送信保護リレー駆動
 

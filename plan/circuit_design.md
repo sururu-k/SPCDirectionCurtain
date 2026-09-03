@@ -290,8 +290,8 @@ flowchart LR
 | :--- | :--- | :--- | :---: | :--- | :--- |
 | **D2** | **GPIO 18** | `U0p` | 入力 (INT) | 正半波ゼロクロス検出 (外部割り込み0) | Active LOW |
 | **D3** | **GPIO 19** | `U0m` | 入力 (INT) | 負半波ゼロクロス検出 (外部割り込み1) | Active LOW |
-| **D4** | **GPIO 21** | `Spout`| 出力 | 正側トライアックSSRトリガ (MOC3041) | Active HIGH (またはLow) |
-| **D5** | **GPIO 22** | `Smout`| 出力 | 負側トライアックSSRトリガ (MOC3041) | Active HIGH (またはLow) |
+| **D4** | **GPIO 4**  | `Spout`| 出力 | 正側トライアックSSRトリガ (MOC3041) | Active HIGH (またはLow) |
+| **D5** | **GPIO 5**  | `Smout`| 出力 | 負側トライアックSSRトリガ (MOC3041) | Active HIGH (またはLow) |
 | **D6** | **GPIO 23** | `Sm` | 入力 | アンサーバック受信入力 (PC817C) | Active LOW |
 | **D7** | **GPIO 25** | `Sp` | 入力 | S線正側モニタ入力 (PC817D) | Active LOW |
 | **D8** | **GPIO 26** | `R` | 出力 | 送信イネーブル保護リレー駆動 | Active HIGH |
@@ -299,7 +299,7 @@ flowchart LR
 | **D10** | **GPIO 14** | `SHIFT_CP` | 出力 | 74HC165 クロックパルス (CP) | 立ち上がり |
 | **D11** | **GPIO 12** | `SHIFT_Q7` | 入力 | 74HC165 シリアルデータ入力 (Q7) | デジスイッチ8bit |
 | **A0** | **GPIO 34** | `TYPE_SW` | アナログ入力 | 種別切替ロータリースイッチ (抵抗ラダー分圧) | アナログ電圧 (0〜VCC) |
-| **A4 / A5** | **GPIO 21/22** | `SDA / SCL` | I2C | 1602 LCD 表示器 (アドレス `0x27` / `0x3F`) | I2Cバス |
+| **A4 / A5** | **GPIO 21 / 22** | `SDA / SCL` | I2C | 1602 LCD 表示器 (アドレス `0x27` / `0x3F`) | I2Cバス (標準ピン) |
 
 ### 5.2 操作入力および表示部 機能ブロック図
 
