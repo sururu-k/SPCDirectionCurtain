@@ -400,7 +400,7 @@ flowchart LR
 
 ## 8. 発展型システム統合ブロック図 v2（System Architecture Version 2）
 
-スマート機能（スマホWi-Fi連携・運行ダイヤ自動連動）および事前検証用の安全テストダミー治具を統合した全体システム構成ブロック図です。
+スマート機能（スマホWi-Fi連携・運行ダイヤ自動連動）を統合した全体システム構成ブロック図です。
 
 ```mermaid
 flowchart TD
@@ -431,10 +431,6 @@ flowchart TD
         end
     end
 
-    subgraph TEST_JIG["安全テスト用ダミー治具 切替可能"]
-        DUMMY_UNIT["LED波形モニタ ＋ 疑似AB返信SW"]
-    end
-
     subgraph REAL_ROLLSIGN["実物方向幕 名鉄6500系等"]
         ROLL_BODY["小糸SPC3方向幕本体"]
     end
@@ -451,9 +447,7 @@ flowchart TD
     FULL_RECT --> TRIAC_SSR
     OPTO_DET --> AB_LOGIC
 
-    TRIAC_SSR -->|S線| TEST_JIG
-    TEST_JIG -->|事前検証OK後| REAL_ROLLSIGN
-    TRIAC_SSR -->|本番接続| REAL_ROLLSIGN
+    TRIAC_SSR -->|S線 指令パルス| REAL_ROLLSIGN
     REAL_ROLLSIGN -->|AB信号| OPTO_DET
 ```
 

@@ -12,7 +12,8 @@
 * 🔍 **実機ピン特定マニュアル**: [`howTo/pin_identification.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/pin_identification.md)（テスターによる実機配線同定手順）
 * 📑 **名鉄コマ対照表 (Markdown)**: [`data/rollsign_table.md`](file:///Users/hiro/SPCDirectionCurtain/data/rollsign_table.md)（コマ番号・行先一覧）
 * 💾 **名鉄コマ対照表 (C++ヘッダー)**: [`data/meitetsu_destinations.h`](file:///Users/hiro/SPCDirectionCurtain/data/meitetsu_destinations.h)（マイコン用PROGMEM配列）
-* 🌐 **スマホWeb指令器 UIアプリ**: [`web/`](file:///Users/hiro/SPCDirectionCurtain/web/)（[`index.html`](file:///Users/hiro/SPCDirectionCurtain/web/index.html), [`style.css`](file:///Users/hiro/SPCDirectionCurtain/web/style.css), [`app.js`](file:///Users/hiro/SPCDirectionCurtain/web/app.js), [`timetable.json`](file:///Users/hiro/SPCDirectionCurtain/web/timetable.json)）
+* 🚀 **GitHub Pages公開手順**: [`howTo/github_pages.md`](file:///Users/hiro/SPCDirectionCurtain/howTo/github_pages.md)（Webアプリ無料公開ガイド）
+* 🌐 **スマホWeb指令器＆シミュレーター**: [`web/`](file:///Users/hiro/SPCDirectionCurtain/web/)（[`index.html`](file:///Users/hiro/SPCDirectionCurtain/web/index.html), [`style.css`](file:///Users/hiro/SPCDirectionCurtain/web/style.css), [`app.js`](file:///Users/hiro/SPCDirectionCurtain/web/app.js), [`timetable.json`](file:///Users/hiro/SPCDirectionCurtain/web/timetable.json)）
 
 ### 1.3 設計思想と背景
 * **純正基板の活用**:
